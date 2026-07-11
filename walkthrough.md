@@ -135,11 +135,18 @@ Before deploying anything to AWS, ensure the microservices build and function pr
    ```bash
    cd d:\HeroVired\Assignments\Orchestration_Scaling_Demo\StreamingApp
    ```
-2. **Start the local Docker Compose stack:**
+2. **Configure Local Environment Variables:**
+   Although the `docker-compose.yml` provides default fallbacks that allow the app to boot up immediately for basic offline testing, you should create a local `.env` file to support full service capabilities (like AWS S3 storage for video assets):
+   - Copy `.env.example` to `.env`:
+     ```bash
+     copy .env.example .env
+     ```
+   - Open the `.env` file and populate it with your settings (JWT secrets, DB name, and AWS credentials/S3 bucket details if you want to test streaming).
+3. **Start the local Docker Compose stack:**
    ```bash
    docker-compose up --build -d
    ```
-3. **Verify running containers:**
+4. **Verify running containers:**
    ```bash
    docker ps
    ```
@@ -465,6 +472,14 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
    awsAccountId: "<YOUR_AWS_ACCOUNT_ID>"
    awsRegion: "us-east-1"
 
+   # AWS configurations for S3 video streaming and uploads
+   aws:
+     accessKeyId: "<YOUR_AWS_ACCESS_KEY_ID>"
+     secretAccessKey: "<YOUR_AWS_SECRET_ACCESS_KEY>"
+     region: "us-east-1"
+     s3Bucket: "<YOUR_AWS_S3_BUCKET_NAME>"
+     cdnUrl: ""
+
    mongodb:
      image: mongo
      tag: 6.0
@@ -571,6 +586,14 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
                  value: "{{ .Values.mongodb.uri }}"
                - name: JWT_SECRET
                  value: "changeme"
+               - name: AWS_ACCESS_KEY_ID
+                 value: "{{ .Values.aws.accessKeyId }}"
+               - name: AWS_SECRET_ACCESS_KEY
+                 value: "{{ .Values.aws.secretAccessKey }}"
+               - name: AWS_REGION
+                 value: "{{ .Values.aws.region }}"
+               - name: AWS_S3_BUCKET
+                 value: "{{ .Values.aws.s3Bucket }}"
    ---
    apiVersion: v1
    kind: Service
@@ -614,6 +637,18 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
                  value: "{{ .Values.mongodb.uri }}"
                - name: JWT_SECRET
                  value: "changeme"
+               - name: AWS_ACCESS_KEY_ID
+                 value: "{{ .Values.aws.accessKeyId }}"
+               - name: AWS_SECRET_ACCESS_KEY
+                 value: "{{ .Values.aws.secretAccessKey }}"
+               - name: AWS_REGION
+                 value: "{{ .Values.aws.region }}"
+               - name: AWS_S3_BUCKET
+                 value: "{{ .Values.aws.s3Bucket }}"
+               - name: AWS_CDN_URL
+                 value: "{{ .Values.aws.cdnUrl }}"
+               - name: STREAMING_PUBLIC_URL
+                 value: "/api/streaming"
    ---
    apiVersion: v1
    kind: Service
@@ -657,6 +692,16 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
                  value: "{{ .Values.mongodb.uri }}"
                - name: JWT_SECRET
                  value: "changeme"
+               - name: AWS_ACCESS_KEY_ID
+                 value: "{{ .Values.aws.accessKeyId }}"
+               - name: AWS_SECRET_ACCESS_KEY
+                 value: "{{ .Values.aws.secretAccessKey }}"
+               - name: AWS_REGION
+                 value: "{{ .Values.aws.region }}"
+               - name: AWS_S3_BUCKET
+                 value: "{{ .Values.aws.s3Bucket }}"
+               - name: AWS_CDN_URL
+                 value: "{{ .Values.aws.cdnUrl }}"
    ---
    apiVersion: v1
    kind: Service
