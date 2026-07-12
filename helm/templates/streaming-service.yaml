@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming-deployment
+  namespace: streaming-app
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: streaming-service
+  template:
+    metadata:
+      labels:
+        app: streaming-service
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      containers:
+        - name: streaming-service
+          image: "{{ .Values.imageRegistry }}/{{ .Values.streamingService.image }}:{{ .Values.streamingService.tag }}"
+          ports:
+            - containerPort: {{ .Values.streamingService.port }}
+          env:
+            - name: PORT
+              value: "{{ .Values.streamingService.port }}"
+            - name: MONGO_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: mongo-uri
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: streaming-app-secrets
+                  key: jwt-secret
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: aws-region
+            - name: AWS_S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: aws-s3-bucket
+            - name: AWS_CDN_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: aws-cdn-url
+            - name: STREAMING_PUBLIC_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: streaming-public-url
+            - name: CLIENT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: client-url
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: streaming-service
+  namespace: streaming-app
+spec:
+  ports:
+    - port: {{ .Values.streamingService.port }}
+      targetPort: {{ .Values.streamingService.port }}
+  selector:
+    app: streaming-service

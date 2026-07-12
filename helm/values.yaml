@@ -1,5 +1,8 @@
 replicaCount: 2
 
+# Public client URL of the LoadBalancer for CORS configuration
+clientUrl: "http://abbcd4f549a5540e3afab313e947abab-670547553.us-east-1.elb.amazonaws.com"
+
 # Your ECR Image Registry (prefix without the sub-paths)
 imageRegistry: "376432388605.dkr.ecr.us-east-1.amazonaws.com"
 

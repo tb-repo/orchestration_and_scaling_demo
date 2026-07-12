@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-deployment
+  namespace: streaming-app
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: chat-service
+  template:
+    metadata:
+      labels:
+        app: chat-service
+    spec:
+      containers:
+        - name: chat-service
+          image: "{{ .Values.imageRegistry }}/{{ .Values.chatService.image }}:{{ .Values.chatService.tag }}"
+          ports:
+            - containerPort: {{ .Values.chatService.port }}
+          env:
+            - name: PORT
+              value: "{{ .Values.chatService.port }}"
+            - name: MONGO_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: mongo-uri
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: streaming-app-secrets
+                  key: jwt-secret
+            - name: CLIENT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: client-url
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-service
+  namespace: streaming-app
+spec:
+  ports:
+    - port: {{ .Values.chatService.port }}
+      targetPort: {{ .Values.chatService.port }}
+  selector:
+    app: chat-service

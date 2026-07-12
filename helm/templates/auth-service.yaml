@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-deployment
+  namespace: streaming-app
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      containers:
+        - name: auth-service
+          image: "{{ .Values.imageRegistry }}/{{ .Values.authService.image }}:{{ .Values.authService.tag }}"
+          ports:
+            - containerPort: {{ .Values.authService.port }}
+          env:
+            - name: PORT
+              value: "{{ .Values.authService.port }}"
+            - name: MONGO_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: mongo-uri
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: streaming-app-secrets
+                  key: jwt-secret
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: aws-region
+            - name: AWS_S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: aws-s3-bucket
+            - name: CLIENT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: streaming-app-config
+                  key: client-url
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: streaming-app
+spec:
+  ports:
+    - port: {{ .Values.authService.port }}
+      targetPort: {{ .Values.authService.port }}
+  selector:
+    app: auth-service

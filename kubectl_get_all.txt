@@ -1,0 +1,44 @@
+(base) PS D:\HeroVired\Assignments\Orchestration_Scaling_Demo> kubectl get all -n streaming-app
+File association not found for extension .py
+NAME                                        READY   STATUS    RESTARTS   AGE
+pod/admin-deployment-6665c4456c-l42p9       1/1     Running   0          4m57s
+pod/admin-deployment-6665c4456c-m6vsj       1/1     Running   0          4m56s
+pod/auth-deployment-dbb4bd64b-bvtgw         1/1     Running   0          4m56s
+pod/auth-deployment-dbb4bd64b-k7bw2         1/1     Running   0          4m57s
+pod/chat-deployment-995fc94d4-6n2fx         1/1     Running   0          4m56s
+pod/chat-deployment-995fc94d4-zltw2         1/1     Running   0          4m55s
+pod/frontend-deployment-b487c4d7b-t6qt4     1/1     Running   0          124m
+pod/frontend-deployment-b487c4d7b-thtlq     1/1     Running   0          124m
+pod/mongodb-statefulset-0                   1/1     Running   0          124m
+pod/streaming-deployment-6bc4ff8f5d-tlv6s   1/1     Running   0          4m53s
+pod/streaming-deployment-6bc4ff8f5d-x9vt5   1/1     Running   0          4m55s
+
+NAME                        TYPE           CLUSTER-IP       EXTERNAL-IP                                                              PORT(S)        AGE
+service/admin-service       ClusterIP      10.100.73.80     <none>                                                                   3003/TCP       124m
+service/auth-service        ClusterIP      10.100.147.233   <none>                                                                   3001/TCP       124m
+service/chat-service        ClusterIP      10.100.135.174   <none>                                                                   3004/TCP       124m
+service/frontend-service    LoadBalancer   10.100.192.55    abbcd4f549a5540e3afab313e947abab-670547553.us-east-1.elb.amazonaws.com   80:30803/TCP   124m
+service/mongodb-service     ClusterIP      10.100.74.235    <none>                                                                   27017/TCP      124m
+service/streaming-service   ClusterIP      10.100.68.184    <none>                                                                   3002/TCP       124m
+
+NAME                                   READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/admin-deployment       2/2     2            2           124m
+deployment.apps/auth-deployment        2/2     2            2           124m
+deployment.apps/chat-deployment        2/2     2            2           124m
+deployment.apps/frontend-deployment    2/2     2            2           124m
+deployment.apps/streaming-deployment   2/2     2            2           124m
+
+NAME                                              DESIRED   CURRENT   READY   AGE
+replicaset.apps/admin-deployment-6665c4456c       2         2         2       5m2s
+replicaset.apps/admin-deployment-844f679f7f       0         0         0       124m
+replicaset.apps/auth-deployment-6d49c9c466        0         0         0       124m
+replicaset.apps/auth-deployment-dbb4bd64b         2         2         2       5m2s
+replicaset.apps/chat-deployment-7f9b4f68          0         0         0       124m
+replicaset.apps/chat-deployment-995fc94d4         2         2         2       5m1s
+replicaset.apps/frontend-deployment-b487c4d7b     2         2         2       124m
+replicaset.apps/streaming-deployment-66dccdc9f4   0         0         0       124m
+replicaset.apps/streaming-deployment-6bc4ff8f5d   2         2         2       5m
+
+NAME                                   READY   AGE
+statefulset.apps/mongodb-statefulset   1/1     124m
+(base) PS D:\HeroVired\Assignments\Orchestration_Scaling_Demo> 
