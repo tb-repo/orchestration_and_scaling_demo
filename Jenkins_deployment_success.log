@@ -1,0 +1,1742 @@
+Started by user herovired
+Obtained Jenkinsfile from git https://github.com/tb-repo/orchestration_and_scaling_demo.git
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/lib/jenkins/workspace/HV-B16A-TB-StreamingApp-Pipeline
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+The recommended git tool is: git
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/lib/jenkins/workspace/HV-B16A-TB-StreamingApp-Pipeline/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/tb-repo/orchestration_and_scaling_demo.git # timeout=10
+Fetching upstream changes from https://github.com/tb-repo/orchestration_and_scaling_demo.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.43.0'
+ > git fetch --tags --force --progress -- https://github.com/tb-repo/orchestration_and_scaling_demo.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+Checking out Revision 141028fdada88ea884fd2f68ae14951e27b22563 (refs/remotes/origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 141028fdada88ea884fd2f68ae14951e27b22563 # timeout=10
+Commit message: "Fixed the Jenkinsfile docker path issues"
+ > git rev-list --no-walk e0bc72f6153768b1baa91b9edef36b76e49dbdb8 # timeout=10
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout Code)
+[Pipeline] checkout
+The recommended git tool is: git
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/lib/jenkins/workspace/HV-B16A-TB-StreamingApp-Pipeline/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/tb-repo/orchestration_and_scaling_demo.git # timeout=10
+Fetching upstream changes from https://github.com/tb-repo/orchestration_and_scaling_demo.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.43.0'
+ > git fetch --tags --force --progress -- https://github.com/tb-repo/orchestration_and_scaling_demo.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+Checking out Revision 141028fdada88ea884fd2f68ae14951e27b22563 (refs/remotes/origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 141028fdada88ea884fd2f68ae14951e27b22563 # timeout=10
+Commit message: "Fixed the Jenkinsfile docker path issues"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (AWS ECR Login & Push)
+[Pipeline] withCredentials
+Masking supported pattern matches of $AWS_ACCOUNT_ID or $AWS_DEFAULT_REGION or $AWS_ACCESS_KEY_ID or $AWS_SECRET_ACCESS_KEY
+[Pipeline] {
+[Pipeline] script
+[Pipeline] {
+[Pipeline] dir
+Running in /var/lib/jenkins/workspace/HV-B16A-TB-StreamingApp-Pipeline/StreamingApp
+[Pipeline] {
+[Pipeline] sh
++ aws ecr get-login-password --region ****
++ docker login --username AWS --password-stdin ****.dkr.ecr.****.amazonaws.com
+
+WARNING! Your credentials are stored unencrypted in '/var/lib/jenkins/.docker/config.json'.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/go/credential-store/
+
+Login Succeeded
+[Pipeline] sh
++ docker build -t streaming-app-auth:4 -f backend/authService/Dockerfile backend/authService
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  102.9kB
+Step 1/8 : FROM node:18-alpine AS base
+18-alpine: Pulling from library/node
+25ff2da83641: Pulling fs layer
+dd71dde834b5: Pulling fs layer
+1e5a4c89cee5: Pulling fs layer
+f18232174bc9: Pulling fs layer
+25ff2da83641: Download complete
+1e5a4c89cee5: Download complete
+f18232174bc9: Download complete
+f18232174bc9: Pull complete
+27e1cfd0b5f2: Download complete
+dd71dde834b5: Download complete
+0758d11b0bb7: Download complete
+dd71dde834b5: Pull complete
+25ff2da83641: Pull complete
+1e5a4c89cee5: Pull complete
+Digest: sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+Status: Downloaded newer image for node:18-alpine
+ ---> 8d6421d663b4
+Step 2/8 : WORKDIR /app
+ ---> Running in 6ef8190f14c1
+ ---> Removed intermediate container 6ef8190f14c1
+ ---> a0b4de9e8292
+Step 3/8 : COPY package*.json ./
+ ---> fc8625d94828
+Step 4/8 : RUN npm install --production
+ ---> Running in f59700ec1fd8
+[91mnpm warn config production Use `--omit=dev` instead.
+[0m[91mnpm warn deprecated crypto@1.0.1: This package is no longer supported. It's now a built-in Node module. If you've depended on crypto, you should switch to the one that's built-in.
+[0m
+added 191 packages, and audited 192 packages in 5s
+
+19 packages are looking for funding
+  run `npm fund` for details
+
+19 vulnerabilities (4 low, 2 moderate, 12 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+[91mnpm notice
+npm notice New major version of npm available! 10.8.2 -> 12.0.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.1
+npm notice To update run: npm install -g npm@12.0.1
+npm notice
+[0m ---> Removed intermediate container f59700ec1fd8
+ ---> 964b1ab74296
+Step 5/8 : COPY . .
+ ---> 276d226acab9
+Step 6/8 : ENV NODE_ENV=production
+ ---> Running in e22c11f36e80
+ ---> Removed intermediate container e22c11f36e80
+ ---> b25ea2292aa0
+Step 7/8 : EXPOSE 3001
+ ---> Running in 74bc6bed445f
+ ---> Removed intermediate container 74bc6bed445f
+ ---> 8a41d75949fe
+Step 8/8 : CMD ["npm", "run", "start"]
+ ---> Running in b971538f850c
+ ---> Removed intermediate container b971538f850c
+ ---> 41fbd7cb6351
+Successfully built 41fbd7cb6351
+Successfully tagged streaming-app-auth:4
+[Pipeline] sh
++ docker tag streaming-app-auth:4 ****.dkr.ecr.****.amazonaws.com/streaming-app-auth:4
+[Pipeline] sh
++ docker tag streaming-app-auth:4 ****.dkr.ecr.****.amazonaws.com/streaming-app-auth:latest
+[Pipeline] sh
++ docker push ****.dkr.ecr.****.amazonaws.com/streaming-app-auth:4
+The push refers to repository [****.dkr.ecr.****.amazonaws.com/streaming-app-auth]
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Waiting
+dd71dde834b5: Waiting
+d7147c128c2f: Waiting
+dd71dde834b5: Waiting
+d7147c128c2f: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Waiting
+d7147c128c2f: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Waiting
+dd71dde834b5: Waiting
+d7147c128c2f: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Waiting
+dd71dde834b5: Waiting
+dd71dde834b5: Waiting
+d7147c128c2f: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Waiting
+dd71dde834b5: Waiting
+d7147c128c2f: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Waiting
+dd71dde834b5: Waiting
+d7147c128c2f: Waiting
+d7147c128c2f: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Waiting
+dd71dde834b5: Waiting
+d7147c128c2f: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Waiting
+dd71dde834b5: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Waiting
+dd71dde834b5: Waiting
+d7147c128c2f: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+1e5a4c89cee5: Waiting
+d7147c128c2f: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Waiting
+dd71dde834b5: Waiting
+0610e2804122: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Pushed
+d7147c128c2f: Pushed
+00e367db1115: Pushed
+d0fbb9f6699f: Pushed
+1e5a4c89cee5: Pushed
+f18232174bc9: Pushed
+0610e2804122: Pushed
+dd71dde834b5: Pushed
+4: digest: sha256:41fbd7cb6351f63928ed3c8e92799f696570ee94cba156b53c0f19336a2694e2 size: 2058
+[Pipeline] sh
++ docker push ****.dkr.ecr.****.amazonaws.com/streaming-app-auth:latest
+The push refers to repository [****.dkr.ecr.****.amazonaws.com/streaming-app-auth]
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+d7147c128c2f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+d7147c128c2f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+d7147c128c2f: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+d7147c128c2f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+25ff2da83641: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+d7147c128c2f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+d7147c128c2f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+00e367db1115: Waiting
+d0fbb9f6699f: Waiting
+d7147c128c2f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+00e367db1115: Waiting
+0610e2804122: Waiting
+d0fbb9f6699f: Waiting
+d7147c128c2f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Layer already exists
+00e367db1115: Layer already exists
+0610e2804122: Layer already exists
+d0fbb9f6699f: Layer already exists
+d7147c128c2f: Layer already exists
+f18232174bc9: Layer already exists
+dd71dde834b5: Layer already exists
+1e5a4c89cee5: Layer already exists
+latest: digest: sha256:41fbd7cb6351f63928ed3c8e92799f696570ee94cba156b53c0f19336a2694e2 size: 2058
+[Pipeline] sh
++ docker build -t streaming-app-streaming:4 -f backend/streamingService/Dockerfile backend
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  16.15MB
+Step 1/8 : FROM node:18-alpine AS base
+ ---> 8d6421d663b4
+Step 2/8 : WORKDIR /app/streamingService
+ ---> Running in 18dfe739feeb
+ ---> Removed intermediate container 18dfe739feeb
+ ---> 024227eba8de
+Step 3/8 : COPY streamingService/package*.json ./
+ ---> c56137cb18ba
+Step 4/8 : RUN npm install --production
+ ---> Running in bab6386952a9
+[91mnpm warn config production Use `--omit=dev` instead.
+[0m
+added 239 packages, and audited 240 packages in 12s
+
+21 packages are looking for funding
+  run `npm fund` for details
+
+36 vulnerabilities (5 low, 23 moderate, 6 high, 2 critical)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+[91mnpm notice
+npm notice New major version of npm available! 10.8.2 -> 12.0.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.1
+npm notice To update run: npm install -g npm@12.0.1
+npm notice
+[0m ---> Removed intermediate container bab6386952a9
+ ---> a48169cd7445
+Step 5/8 : COPY streamingService/. ./
+ ---> 82cad48eaa10
+Step 6/8 : ENV NODE_ENV=production
+ ---> Running in 6174484085c0
+ ---> Removed intermediate container 6174484085c0
+ ---> a0ed1f86e85b
+Step 7/8 : EXPOSE 3002
+ ---> Running in 87685492ddc5
+ ---> Removed intermediate container 87685492ddc5
+ ---> 167c8ef89af0
+Step 8/8 : CMD ["npm", "run", "start"]
+ ---> Running in 90551e40e653
+ ---> Removed intermediate container 90551e40e653
+ ---> a87793305cb0
+Successfully built a87793305cb0
+Successfully tagged streaming-app-streaming:4
+[Pipeline] sh
++ docker tag streaming-app-streaming:4 ****.dkr.ecr.****.amazonaws.com/streaming-app-streaming:4
+[Pipeline] sh
++ docker tag streaming-app-streaming:4 ****.dkr.ecr.****.amazonaws.com/streaming-app-streaming:latest
+[Pipeline] sh
++ docker push ****.dkr.ecr.****.amazonaws.com/streaming-app-streaming:4
+The push refers to repository [****.dkr.ecr.****.amazonaws.com/streaming-app-streaming]
+85e4bef18ade: Waiting
+364c207d1431: Waiting
+b252639ef76f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+462721425c14: Waiting
+462721425c14: Waiting
+85e4bef18ade: Waiting
+364c207d1431: Waiting
+b252639ef76f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+462721425c14: Waiting
+85e4bef18ade: Waiting
+364c207d1431: Waiting
+b252639ef76f: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+462721425c14: Waiting
+85e4bef18ade: Waiting
+364c207d1431: Waiting
+b252639ef76f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+462721425c14: Waiting
+85e4bef18ade: Waiting
+364c207d1431: Waiting
+b252639ef76f: Waiting
+f18232174bc9: Waiting
+85e4bef18ade: Waiting
+364c207d1431: Waiting
+b252639ef76f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+462721425c14: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+462721425c14: Waiting
+85e4bef18ade: Waiting
+364c207d1431: Waiting
+b252639ef76f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+b252639ef76f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+462721425c14: Waiting
+85e4bef18ade: Waiting
+364c207d1431: Waiting
+b252639ef76f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+462721425c14: Waiting
+85e4bef18ade: Waiting
+364c207d1431: Waiting
+25ff2da83641: Waiting
+462721425c14: Waiting
+85e4bef18ade: Waiting
+364c207d1431: Waiting
+b252639ef76f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+462721425c14: Waiting
+85e4bef18ade: Waiting
+364c207d1431: Waiting
+b252639ef76f: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+25ff2da83641: Pushed
+85e4bef18ade: Pushed
+462721425c14: Pushed
+1e5a4c89cee5: Pushed
+f18232174bc9: Pushed
+b252639ef76f: Pushed
+364c207d1431: Pushed
+dd71dde834b5: Pushed
+4: digest: sha256:a87793305cb0e34eac15e412e9cd5a41a4a4d53d7902bc3c3b75cdb6fd3f9086 size: 2062
+[Pipeline] sh
++ docker push ****.dkr.ecr.****.amazonaws.com/streaming-app-streaming:latest
+The push refers to repository [****.dkr.ecr.****.amazonaws.com/streaming-app-streaming]
+dd71dde834b5: Waiting
+b252639ef76f: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+85e4bef18ade: Waiting
+462721425c14: Waiting
+364c207d1431: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+b252639ef76f: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+85e4bef18ade: Waiting
+462721425c14: Waiting
+364c207d1431: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Waiting
+85e4bef18ade: Waiting
+462721425c14: Waiting
+364c207d1431: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+b252639ef76f: Waiting
+1e5a4c89cee5: Waiting
+462721425c14: Waiting
+364c207d1431: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+b252639ef76f: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+85e4bef18ade: Waiting
+25ff2da83641: Waiting
+85e4bef18ade: Waiting
+462721425c14: Waiting
+364c207d1431: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+b252639ef76f: Waiting
+1e5a4c89cee5: Waiting
+dd71dde834b5: Waiting
+b252639ef76f: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+85e4bef18ade: Waiting
+462721425c14: Waiting
+364c207d1431: Waiting
+f18232174bc9: Waiting
+462721425c14: Waiting
+364c207d1431: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+b252639ef76f: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+85e4bef18ade: Waiting
+dd71dde834b5: Waiting
+b252639ef76f: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+85e4bef18ade: Waiting
+462721425c14: Waiting
+364c207d1431: Waiting
+f18232174bc9: Waiting
+25ff2da83641: Layer already exists
+85e4bef18ade: Waiting
+462721425c14: Layer already exists
+364c207d1431: Layer already exists
+f18232174bc9: Layer already exists
+dd71dde834b5: Waiting
+b252639ef76f: Layer already exists
+1e5a4c89cee5: Waiting
+85e4bef18ade: Layer already exists
+dd71dde834b5: Layer already exists
+1e5a4c89cee5: Layer already exists
+latest: digest: sha256:a87793305cb0e34eac15e412e9cd5a41a4a4d53d7902bc3c3b75cdb6fd3f9086 size: 2062
+[Pipeline] sh
++ docker build -t streaming-app-admin:4 -f backend/adminService/Dockerfile backend
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  16.15MB
+Step 1/8 : FROM node:18-alpine AS base
+ ---> 8d6421d663b4
+Step 2/8 : WORKDIR /app/adminService
+ ---> Running in 971eb43dab23
+ ---> Removed intermediate container 971eb43dab23
+ ---> 56448b9d63b6
+Step 3/8 : COPY adminService/package*.json ./
+ ---> 7ac5156e2ba8
+Step 4/8 : RUN npm install --production
+ ---> Running in a61740ed7f17
+[91mnpm warn config production Use `--omit=dev` instead.
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/client-s3@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/client-sso@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/core@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/crc64-nvme@3.969.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/credential-provider-env@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/credential-provider-http@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/credential-provider-ini@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/credential-provider-login@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/credential-provider-node@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/credential-provider-process@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/credential-provider-sso@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/credential-provider-web-identity@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/middleware-bucket-endpoint@3.969.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/middleware-expect-continue@3.969.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/middleware-flexible-checksums@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/middleware-host-header@3.969.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/middleware-location-constraint@3.969.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/middleware-logger@3.969.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/middleware-recursion-detection@3.969.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/middleware-sdk-s3@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/middleware-ssec@3.969.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/middleware-user-agent@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/nested-clients@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/region-config-resolver@3.969.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/s3-request-presigner@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/signature-v4-multi-region@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/token-providers@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/types@3.969.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/util-arn-parser@3.968.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/util-endpoints@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/util-format-url@3.969.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/util-locate-window@3.965.2',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/util-user-agent-node@3.970.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@aws-sdk/xml-builder@3.969.0',
+npm warn EBADENGINE   required: { node: '>=20.0.0' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+[0m[91mnpm warn deprecated multer@1.4.5-lts.2: Multer 1.x is impacted by a number of vulnerabilities, which have been patched in 2.x. You should upgrade to the latest 2.x version.
+[0m
+added 264 packages, and audited 265 packages in 11s
+
+24 packages are looking for funding
+  run `npm fund` for details
+
+30 vulnerabilities (25 moderate, 4 high, 1 critical)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+[91mnpm notice
+npm notice New major version of npm available! 10.8.2 -> 12.0.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.1
+npm notice To update run: npm install -g npm@12.0.1
+npm notice
+[0m ---> Removed intermediate container a61740ed7f17
+ ---> 2ebbb38f98a6
+Step 5/8 : COPY adminService/. ./
+ ---> e4a281ef00c0
+Step 6/8 : ENV NODE_ENV=production
+ ---> Running in d725c0a8b202
+ ---> Removed intermediate container d725c0a8b202
+ ---> 71dd4185ce8c
+Step 7/8 : EXPOSE 3003
+ ---> Running in 8e5a9e20921b
+ ---> Removed intermediate container 8e5a9e20921b
+ ---> 3271481c5ec5
+Step 8/8 : CMD ["npm", "run", "start"]
+ ---> Running in 3781fc01960c
+ ---> Removed intermediate container 3781fc01960c
+ ---> 5354a916bb14
+Successfully built 5354a916bb14
+Successfully tagged streaming-app-admin:4
+[Pipeline] sh
++ docker tag streaming-app-admin:4 ****.dkr.ecr.****.amazonaws.com/streaming-app-admin:4
+[Pipeline] sh
++ docker tag streaming-app-admin:4 ****.dkr.ecr.****.amazonaws.com/streaming-app-admin:latest
+[Pipeline] sh
++ docker push ****.dkr.ecr.****.amazonaws.com/streaming-app-admin:4
+The push refers to repository [****.dkr.ecr.****.amazonaws.com/streaming-app-admin]
+03405d54e23e: Waiting
+1e5a4c89cee5: Waiting
+92c4f86927c7: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f18232174bc9: Waiting
+f35895dda351: Waiting
+dd71dde834b5: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+1e5a4c89cee5: Waiting
+92c4f86927c7: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f18232174bc9: Waiting
+f35895dda351: Waiting
+03405d54e23e: Waiting
+1e5a4c89cee5: Waiting
+92c4f86927c7: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f18232174bc9: Waiting
+f35895dda351: Waiting
+dd71dde834b5: Waiting
+f931507744ba: Waiting
+f18232174bc9: Waiting
+f35895dda351: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+1e5a4c89cee5: Waiting
+92c4f86927c7: Waiting
+25ff2da83641: Waiting
+f18232174bc9: Waiting
+f35895dda351: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+1e5a4c89cee5: Waiting
+92c4f86927c7: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f18232174bc9: Waiting
+f35895dda351: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+1e5a4c89cee5: Waiting
+92c4f86927c7: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+03405d54e23e: Waiting
+1e5a4c89cee5: Waiting
+92c4f86927c7: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f18232174bc9: Waiting
+f35895dda351: Waiting
+dd71dde834b5: Waiting
+f18232174bc9: Waiting
+f35895dda351: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+1e5a4c89cee5: Waiting
+92c4f86927c7: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+1e5a4c89cee5: Waiting
+92c4f86927c7: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f18232174bc9: Waiting
+f35895dda351: Waiting
+03405d54e23e: Waiting
+1e5a4c89cee5: Waiting
+92c4f86927c7: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f18232174bc9: Waiting
+f35895dda351: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+92c4f86927c7: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f18232174bc9: Waiting
+f35895dda351: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+1e5a4c89cee5: Waiting
+f931507744ba: Waiting
+f18232174bc9: Waiting
+f931507744ba: Waiting
+25ff2da83641: Pushed
+f931507744ba: Pushed
+f35895dda351: Pushed
+92c4f86927c7: Pushed
+1e5a4c89cee5: Pushed
+f18232174bc9: Pushed
+03405d54e23e: Pushed
+dd71dde834b5: Pushed
+4: digest: sha256:5354a916bb14428f81f0d670b4fd0f7f42579b48f5c9e9f568f7652d0be6fd80 size: 2059
+[Pipeline] sh
++ docker push ****.dkr.ecr.****.amazonaws.com/streaming-app-admin:latest
+The push refers to repository [****.dkr.ecr.****.amazonaws.com/streaming-app-admin]
+03405d54e23e: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f35895dda351: Waiting
+92c4f86927c7: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+92c4f86927c7: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f35895dda351: Waiting
+f931507744ba: Waiting
+f35895dda351: Waiting
+92c4f86927c7: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+25ff2da83641: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f35895dda351: Waiting
+92c4f86927c7: Waiting
+92c4f86927c7: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f35895dda351: Waiting
+92c4f86927c7: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f35895dda351: Waiting
+92c4f86927c7: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+03405d54e23e: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f35895dda351: Waiting
+03405d54e23e: Waiting
+25ff2da83641: Waiting
+f931507744ba: Waiting
+f35895dda351: Waiting
+92c4f86927c7: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+25ff2da83641: Layer already exists
+f931507744ba: Layer already exists
+f35895dda351: Layer already exists
+92c4f86927c7: Layer already exists
+1e5a4c89cee5: Waiting
+f18232174bc9: Layer already exists
+dd71dde834b5: Layer already exists
+03405d54e23e: Layer already exists
+1e5a4c89cee5: Layer already exists
+latest: digest: sha256:5354a916bb14428f81f0d670b4fd0f7f42579b48f5c9e9f568f7652d0be6fd80 size: 2059
+[Pipeline] sh
++ docker build -t streaming-app-chat:4 -f backend/chatService/Dockerfile backend
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  16.15MB
+Step 1/8 : FROM node:18-alpine AS base
+ ---> 8d6421d663b4
+Step 2/8 : WORKDIR /app/chatService
+ ---> Running in f448861480ee
+ ---> Removed intermediate container f448861480ee
+ ---> f467158d8674
+Step 3/8 : COPY chatService/package*.json ./
+ ---> 828a4d890352
+Step 4/8 : RUN npm install --production
+ ---> Running in cf9f3633c46e
+[91mnpm warn config production Use `--omit=dev` instead.
+[0m
+added 158 packages, and audited 159 packages in 4s
+
+21 packages are looking for funding
+  run `npm fund` for details
+
+13 vulnerabilities (7 moderate, 6 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+[91mnpm notice
+npm notice New major version of npm available! 10.8.2 -> 12.0.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.1
+npm notice To update run: npm install -g npm@12.0.1
+npm notice
+[0m ---> Removed intermediate container cf9f3633c46e
+ ---> 115a4baaacd5
+Step 5/8 : COPY chatService/. ./
+ ---> 8b9f67a2e6d6
+Step 6/8 : ENV NODE_ENV=production
+ ---> Running in 0c637d9b9304
+ ---> Removed intermediate container 0c637d9b9304
+ ---> 01a6094f44ee
+Step 7/8 : EXPOSE 3004
+ ---> Running in 65e70b9262b3
+ ---> Removed intermediate container 65e70b9262b3
+ ---> d4897d83d159
+Step 8/8 : CMD ["npm", "run", "start"]
+ ---> Running in da46d8e6bbe7
+ ---> Removed intermediate container da46d8e6bbe7
+ ---> 561007d6228a
+Successfully built 561007d6228a
+Successfully tagged streaming-app-chat:4
+[Pipeline] sh
++ docker tag streaming-app-chat:4 ****.dkr.ecr.****.amazonaws.com/streaming-app-chat:4
+[Pipeline] sh
++ docker tag streaming-app-chat:4 ****.dkr.ecr.****.amazonaws.com/streaming-app-chat:latest
+[Pipeline] sh
++ docker push ****.dkr.ecr.****.amazonaws.com/streaming-app-chat:4
+The push refers to repository [****.dkr.ecr.****.amazonaws.com/streaming-app-chat]
+93e8372d02a4: Waiting
+ac5a9c4d6b3c: Waiting
+6260c8855540: Waiting
+73bdb5a37217: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+6260c8855540: Waiting
+73bdb5a37217: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+93e8372d02a4: Waiting
+ac5a9c4d6b3c: Waiting
+73bdb5a37217: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+93e8372d02a4: Waiting
+ac5a9c4d6b3c: Waiting
+6260c8855540: Waiting
+6260c8855540: Waiting
+73bdb5a37217: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+93e8372d02a4: Waiting
+ac5a9c4d6b3c: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+93e8372d02a4: Waiting
+ac5a9c4d6b3c: Waiting
+6260c8855540: Waiting
+73bdb5a37217: Waiting
+f18232174bc9: Waiting
+ac5a9c4d6b3c: Waiting
+6260c8855540: Waiting
+73bdb5a37217: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+93e8372d02a4: Waiting
+93e8372d02a4: Waiting
+ac5a9c4d6b3c: Waiting
+6260c8855540: Waiting
+73bdb5a37217: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+73bdb5a37217: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+93e8372d02a4: Waiting
+ac5a9c4d6b3c: Waiting
+6260c8855540: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+93e8372d02a4: Waiting
+ac5a9c4d6b3c: Waiting
+6260c8855540: Waiting
+73bdb5a37217: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+93e8372d02a4: Waiting
+ac5a9c4d6b3c: Waiting
+6260c8855540: Waiting
+73bdb5a37217: Waiting
+f18232174bc9: Waiting
+93e8372d02a4: Waiting
+ac5a9c4d6b3c: Waiting
+6260c8855540: Waiting
+73bdb5a37217: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+25ff2da83641: Waiting
+93e8372d02a4: Pushed
+25ff2da83641: Pushed
+6260c8855540: Pushed
+73bdb5a37217: Pushed
+1e5a4c89cee5: Pushed
+f18232174bc9: Pushed
+ac5a9c4d6b3c: Pushed
+dd71dde834b5: Pushed
+4: digest: sha256:561007d6228ac8b1024b37d427dd5ffaccbf1959878f16a0d7aba6706aac4540 size: 2058
+[Pipeline] sh
++ docker push ****.dkr.ecr.****.amazonaws.com/streaming-app-chat:latest
+The push refers to repository [****.dkr.ecr.****.amazonaws.com/streaming-app-chat]
+6260c8855540: Waiting
+ac5a9c4d6b3c: Waiting
+73bdb5a37217: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+93e8372d02a4: Waiting
+25ff2da83641: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+93e8372d02a4: Waiting
+25ff2da83641: Waiting
+6260c8855540: Waiting
+ac5a9c4d6b3c: Waiting
+73bdb5a37217: Waiting
+1e5a4c89cee5: Waiting
+93e8372d02a4: Waiting
+25ff2da83641: Waiting
+6260c8855540: Waiting
+ac5a9c4d6b3c: Waiting
+73bdb5a37217: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+93e8372d02a4: Waiting
+25ff2da83641: Waiting
+6260c8855540: Waiting
+ac5a9c4d6b3c: Waiting
+73bdb5a37217: Waiting
+73bdb5a37217: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+93e8372d02a4: Waiting
+25ff2da83641: Waiting
+6260c8855540: Waiting
+ac5a9c4d6b3c: Waiting
+dd71dde834b5: Waiting
+93e8372d02a4: Waiting
+25ff2da83641: Waiting
+6260c8855540: Waiting
+ac5a9c4d6b3c: Waiting
+73bdb5a37217: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+6260c8855540: Waiting
+ac5a9c4d6b3c: Waiting
+73bdb5a37217: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+93e8372d02a4: Waiting
+25ff2da83641: Waiting
+1e5a4c89cee5: Waiting
+f18232174bc9: Waiting
+dd71dde834b5: Waiting
+93e8372d02a4: Waiting
+25ff2da83641: Waiting
+6260c8855540: Waiting
+ac5a9c4d6b3c: Waiting
+73bdb5a37217: Waiting
+dd71dde834b5: Layer already exists
+93e8372d02a4: Layer already exists
+25ff2da83641: Layer already exists
+6260c8855540: Layer already exists
+ac5a9c4d6b3c: Layer already exists
+73bdb5a37217: Layer already exists
+1e5a4c89cee5: Layer already exists
+f18232174bc9: Layer already exists
+latest: digest: sha256:561007d6228ac8b1024b37d427dd5ffaccbf1959878f16a0d7aba6706aac4540 size: 2058
+[Pipeline] sh
++ docker build -t streaming-app-frontend:4 --build-arg REACT_APP_AUTH_API_URL=/api/auth --build-arg REACT_APP_STREAMING_API_URL=/api/streaming --build-arg REACT_APP_STREAMING_PUBLIC_URL=/api/streaming --build-arg REACT_APP_ADMIN_API_URL=/api/admin --build-arg REACT_APP_CHAT_API_URL=/api/chat --build-arg REACT_APP_CHAT_SOCKET_URL=/ -f frontend/Dockerfile frontend
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  970.2kB
+Step 1/23 : FROM node:18-alpine AS build
+ ---> 8d6421d663b4
+Step 2/23 : WORKDIR /app
+ ---> Using cache
+ ---> a0b4de9e8292
+Step 3/23 : COPY package*.json ./
+ ---> ff8cd20a5c99
+Step 4/23 : RUN npm install
+ ---> Running in 04e52f6b7503
+[91mnpm warn deprecated w3c-hr-time@1.0.2: Use your platform's native performance.now() and performance.timeOrigin.
+[0m[91mnpm warn deprecated stable@0.1.8: Modern JS already guarantees Array#sort() is a stable sort, so this library is deprecated. See the compatibility table on MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#browser_compatibility
+[0m[91mnpm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+[0m[91mnpm warn deprecated rollup-plugin-terser@7.0.2: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-terser
+[0m[91mnpm warn deprecated workbox-cacheable-response@6.6.0: workbox-background-sync@6.6.0
+[0m[91mnpm warn deprecated workbox-google-analytics@6.6.0: It is not compatible with newer versions of GA starting with v4, as long as you are using GAv3 it should be ok, but the package is not longer being maintained
+[0m[91mnpm warn deprecated domexception@2.0.1: Use your platform's native DOMException instead
+[0m[91mnpm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+[0m[91mnpm warn deprecated svgo@1.3.2: This SVGO version is no longer supported. Upgrade to v2.x.x.
+[0m[91mnpm warn deprecated @babel/plugin-proposal-private-methods@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-private-methods instead.
+[0m[91mnpm warn deprecated @babel/plugin-proposal-numeric-separator@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-numeric-separator instead.
+[0m[91mnpm warn deprecated @babel/plugin-proposal-optional-chaining@7.21.0: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-optional-chaining instead.
+[0m[91mnpm warn deprecated @babel/plugin-proposal-nullish-coalescing-operator@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-nullish-coalescing-operator instead.
+[0m[91mnpm warn deprecated @babel/plugin-proposal-class-properties@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-properties instead.
+[0m
+added 1622 packages, and audited 1623 packages in 46s
+
+270 packages are looking for funding
+  run `npm fund` for details
+
+70 vulnerabilities (15 low, 20 moderate, 33 high, 2 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+[91mnpm notice
+npm notice New major version of npm available! 10.8.2 -> 12.0.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.1
+npm notice To update run: npm install -g npm@12.0.1
+npm notice
+[0m ---> Removed intermediate container 04e52f6b7503
+ ---> 47979049039e
+Step 5/23 : COPY . .
+ ---> 3fdd826e750a
+Step 6/23 : ARG REACT_APP_AUTH_API_URL
+ ---> Running in 698aac5e3288
+ ---> Removed intermediate container 698aac5e3288
+ ---> 37ea6eb80fb2
+Step 7/23 : ARG REACT_APP_STREAMING_API_URL
+ ---> Running in cb6e4eb35f34
+ ---> Removed intermediate container cb6e4eb35f34
+ ---> d58f1d495aeb
+Step 8/23 : ARG REACT_APP_STREAMING_PUBLIC_URL
+ ---> Running in 16f29485907e
+ ---> Removed intermediate container 16f29485907e
+ ---> 1d492c08eb5a
+Step 9/23 : ARG REACT_APP_ADMIN_API_URL
+ ---> Running in cb46fe627a69
+ ---> Removed intermediate container cb46fe627a69
+ ---> e695057d6e2a
+Step 10/23 : ARG REACT_APP_CHAT_API_URL
+ ---> Running in a90c6cd917b0
+ ---> Removed intermediate container a90c6cd917b0
+ ---> d8f01a41bedb
+Step 11/23 : ARG REACT_APP_CHAT_SOCKET_URL
+ ---> Running in bb3b72def287
+ ---> Removed intermediate container bb3b72def287
+ ---> d2bf09a35939
+Step 12/23 : ENV REACT_APP_AUTH_API_URL=${REACT_APP_AUTH_API_URL}
+ ---> Running in 6c7f70b58c31
+ ---> Removed intermediate container 6c7f70b58c31
+ ---> b39014d2873b
+Step 13/23 : ENV REACT_APP_STREAMING_API_URL=${REACT_APP_STREAMING_API_URL}
+ ---> Running in d73296242476
+ ---> Removed intermediate container d73296242476
+ ---> a8697f940af7
+Step 14/23 : ENV REACT_APP_STREAMING_PUBLIC_URL=${REACT_APP_STREAMING_PUBLIC_URL}
+ ---> Running in c882fe1a00b1
+ ---> Removed intermediate container c882fe1a00b1
+ ---> 13b6c27e73ca
+Step 15/23 : ENV REACT_APP_ADMIN_API_URL=${REACT_APP_ADMIN_API_URL}
+ ---> Running in 7174f4e6c1c4
+ ---> Removed intermediate container 7174f4e6c1c4
+ ---> 5db69dec9093
+Step 16/23 : ENV REACT_APP_CHAT_API_URL=${REACT_APP_CHAT_API_URL}
+ ---> Running in edc0f6a1c534
+ ---> Removed intermediate container edc0f6a1c534
+ ---> 5ea780175109
+Step 17/23 : ENV REACT_APP_CHAT_SOCKET_URL=${REACT_APP_CHAT_SOCKET_URL}
+ ---> Running in 5a5bc11cb7cf
+ ---> Removed intermediate container 5a5bc11cb7cf
+ ---> ef91713e29fb
+Step 18/23 : RUN npm run build
+ ---> Running in d1884c9b1078
+
+> frontend@0.1.0 build
+> react-scripts build
+
+Creating an optimized production build...
+[91mBrowserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[0m[91m[0;33mOne of your dependencies, babel-preset-react-app, is importing the
+"@babel/plugin-proposal-private-property-in-object" package without
+declaring it in its dependencies. This is currently working because
+"@babel/plugin-proposal-private-property-in-object" is already in your
+node_modules folder for unrelated reasons, but it [1mmay break at any time[0;33m.
+
+babel-preset-react-app is part of the create-react-app project, [1mwhich
+is not maintianed anymore[0;33m. It is thus unlikely that this bug will
+ever be fixed. Add "@babel/plugin-proposal-private-property-in-object" to
+your devDependencies to work around this error. This will make this message
+go away.[0m
+  
+[0m[91mBrowserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[0mCompiled with warnings.
+
+[eslint] 
+src/contexts/AuthContext.js
+  Line 41:6:  React Hook useEffect has a missing dependency: 'handleLogout'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/AdminDashboard.js
+  Line 31:9:  'theme' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  191.34 kB  build/static/js/main.25b7ac22.js
+  2.44 kB    build/static/css/main.c78d62fe.css
+  1.77 kB    build/static/js/453.d855a71b.chunk.js
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  npm install -g serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+
+ ---> Removed intermediate container d1884c9b1078
+ ---> 9264c16ae6a8
+Step 19/23 : FROM nginx:1.27-alpine AS production
+1.27-alpine: Pulling from library/nginx
+d7e507024086: Pulling fs layer
+39c2ddfd6010: Pulling fs layer
+61ca4f733c80: Pulling fs layer
+81bd8ed7ec67: Pulling fs layer
+197eb75867ef: Pulling fs layer
+34a64644b756: Pulling fs layer
+b464cfdf2a63: Pulling fs layer
+9261b9aff737: Download complete
+2a84448aca9c: Download complete
+d7e507024086: Download complete
+61ca4f733c80: Download complete
+81bd8ed7ec67: Download complete
+34a64644b756: Download complete
+197eb75867ef: Download complete
+b464cfdf2a63: Download complete
+39c2ddfd6010: Download complete
+61ca4f733c80: Pull complete
+b464cfdf2a63: Pull complete
+d7e507024086: Pull complete
+81bd8ed7ec67: Pull complete
+34a64644b756: Pull complete
+197eb75867ef: Pull complete
+39c2ddfd6010: Pull complete
+Digest: sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
+Status: Downloaded newer image for nginx:1.27-alpine
+ ---> 65645c7bb6a0
+Step 20/23 : COPY --from=build /app/build /usr/share/nginx/html
+ ---> c42c957a660c
+Step 21/23 : COPY nginx.conf /etc/nginx/conf.d/default.conf
+ ---> cdc86cdbca47
+Step 22/23 : EXPOSE 80
+ ---> Running in 5d47acfe4edd
+ ---> Removed intermediate container 5d47acfe4edd
+ ---> 527e802225f5
+Step 23/23 : CMD ["nginx", "-g", "daemon off;"]
+ ---> Running in 67b5332b24f2
+ ---> Removed intermediate container 67b5332b24f2
+ ---> bd43bdb5ec23
+Successfully built bd43bdb5ec23
+Successfully tagged streaming-app-frontend:4
+[Pipeline] sh
++ docker tag streaming-app-frontend:4 ****.dkr.ecr.****.amazonaws.com/streaming-app-frontend:4
+[Pipeline] sh
++ docker tag streaming-app-frontend:4 ****.dkr.ecr.****.amazonaws.com/streaming-app-frontend:latest
+[Pipeline] sh
++ docker push ****.dkr.ecr.****.amazonaws.com/streaming-app-frontend:4
+The push refers to repository [****.dkr.ecr.****.amazonaws.com/streaming-app-frontend]
+d105c6e4ae15: Waiting
+f18232174bc9: Waiting
+81bd8ed7ec67: Waiting
+39c2ddfd6010: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+d19ef9c46351: Waiting
+d7e507024086: Waiting
+197eb75867ef: Waiting
+34a64644b756: Waiting
+81bd8ed7ec67: Waiting
+39c2ddfd6010: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+d19ef9c46351: Waiting
+d7e507024086: Waiting
+197eb75867ef: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+f18232174bc9: Waiting
+d7e507024086: Waiting
+197eb75867ef: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+f18232174bc9: Waiting
+81bd8ed7ec67: Waiting
+39c2ddfd6010: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+d19ef9c46351: Waiting
+d19ef9c46351: Waiting
+d7e507024086: Waiting
+197eb75867ef: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+f18232174bc9: Waiting
+81bd8ed7ec67: Waiting
+39c2ddfd6010: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+d19ef9c46351: Waiting
+d7e507024086: Waiting
+197eb75867ef: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+f18232174bc9: Waiting
+81bd8ed7ec67: Waiting
+39c2ddfd6010: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+d19ef9c46351: Waiting
+d7e507024086: Waiting
+197eb75867ef: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+f18232174bc9: Waiting
+81bd8ed7ec67: Waiting
+39c2ddfd6010: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+d19ef9c46351: Waiting
+d7e507024086: Waiting
+197eb75867ef: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+f18232174bc9: Waiting
+81bd8ed7ec67: Waiting
+39c2ddfd6010: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+f18232174bc9: Waiting
+81bd8ed7ec67: Waiting
+39c2ddfd6010: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+d19ef9c46351: Waiting
+d7e507024086: Waiting
+197eb75867ef: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+d19ef9c46351: Waiting
+d7e507024086: Waiting
+197eb75867ef: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+f18232174bc9: Waiting
+81bd8ed7ec67: Waiting
+39c2ddfd6010: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+81bd8ed7ec67: Waiting
+39c2ddfd6010: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+d19ef9c46351: Waiting
+d7e507024086: Waiting
+197eb75867ef: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+f18232174bc9: Waiting
+d19ef9c46351: Waiting
+d7e507024086: Waiting
+197eb75867ef: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+f18232174bc9: Waiting
+81bd8ed7ec67: Waiting
+39c2ddfd6010: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+d7e507024086: Waiting
+d105c6e4ae15: Waiting
+f18232174bc9: Waiting
+39c2ddfd6010: Waiting
+81bd8ed7ec67: Pushed
+b464cfdf2a63: Pushed
+197eb75867ef: Pushed
+34a64644b756: Pushed
+d19ef9c46351: Pushed
+d7e507024086: Pushed
+61ca4f733c80: Pushed
+d105c6e4ae15: Pushed
+f18232174bc9: Pushed
+39c2ddfd6010: Pushed
+4: digest: sha256:bd43bdb5ec23a8deecdf30473fcad1e590a69e8bf11f0d1360e2cacc4643a88c size: 2484
+[Pipeline] sh
++ docker push ****.dkr.ecr.****.amazonaws.com/streaming-app-frontend:latest
+The push refers to repository [****.dkr.ecr.****.amazonaws.com/streaming-app-frontend]
+b464cfdf2a63: Waiting
+197eb75867ef: Waiting
+d7e507024086: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+d19ef9c46351: Waiting
+f18232174bc9: Waiting
+39c2ddfd6010: Waiting
+81bd8ed7ec67: Waiting
+61ca4f733c80: Waiting
+d19ef9c46351: Waiting
+f18232174bc9: Waiting
+39c2ddfd6010: Waiting
+81bd8ed7ec67: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+197eb75867ef: Waiting
+d7e507024086: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+81bd8ed7ec67: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+197eb75867ef: Waiting
+d7e507024086: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+d19ef9c46351: Waiting
+f18232174bc9: Waiting
+39c2ddfd6010: Waiting
+d105c6e4ae15: Waiting
+d19ef9c46351: Waiting
+f18232174bc9: Waiting
+39c2ddfd6010: Waiting
+81bd8ed7ec67: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+197eb75867ef: Waiting
+d7e507024086: Waiting
+34a64644b756: Waiting
+39c2ddfd6010: Waiting
+81bd8ed7ec67: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+197eb75867ef: Waiting
+d7e507024086: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+d19ef9c46351: Waiting
+f18232174bc9: Waiting
+81bd8ed7ec67: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+197eb75867ef: Waiting
+d7e507024086: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+d19ef9c46351: Waiting
+f18232174bc9: Waiting
+39c2ddfd6010: Waiting
+d7e507024086: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+d19ef9c46351: Waiting
+f18232174bc9: Waiting
+39c2ddfd6010: Waiting
+81bd8ed7ec67: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+197eb75867ef: Waiting
+d19ef9c46351: Waiting
+f18232174bc9: Waiting
+39c2ddfd6010: Waiting
+81bd8ed7ec67: Waiting
+61ca4f733c80: Waiting
+b464cfdf2a63: Waiting
+197eb75867ef: Waiting
+d7e507024086: Waiting
+34a64644b756: Waiting
+d105c6e4ae15: Waiting
+b464cfdf2a63: Layer already exists
+197eb75867ef: Layer already exists
+d7e507024086: Layer already exists
+34a64644b756: Layer already exists
+d105c6e4ae15: Layer already exists
+d19ef9c46351: Layer already exists
+f18232174bc9: Layer already exists
+39c2ddfd6010: Layer already exists
+81bd8ed7ec67: Layer already exists
+61ca4f733c80: Layer already exists
+latest: digest: sha256:bd43bdb5ec23a8deecdf30473fcad1e590a69e8bf11f0d1360e2cacc4643a88c size: 2484
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] sh
++ docker image prune -f
+Deleted Images:
+untagged: sha256:5ea7801751090d547f9b45c5775eb4c7e47f3c71288cdec97905d708c7ba6bd0
+deleted: sha256:5ea7801751090d547f9b45c5775eb4c7e47f3c71288cdec97905d708c7ba6bd0
+untagged: sha256:8a41d75949fee353cfab93d3366dc5eeb35e2b9046c71350dc9bc0525205a524
+deleted: sha256:8a41d75949fee353cfab93d3366dc5eeb35e2b9046c71350dc9bc0525205a524
+untagged: sha256:fc8625d948289d702155941793911fb791c46dafe649ea9d801e4e98e8769336
+deleted: sha256:fc8625d948289d702155941793911fb791c46dafe649ea9d801e4e98e8769336
+untagged: sha256:1d492c08eb5a3a0c85972da869b06fc9ac8d94d54ea38da8cc25867a4339c166
+deleted: sha256:1d492c08eb5a3a0c85972da869b06fc9ac8d94d54ea38da8cc25867a4339c166
+untagged: sha256:37ea6eb80fb22c727fd5a168ced35f7588568c7db275fb21015d54f6bc6de74a
+deleted: sha256:37ea6eb80fb22c727fd5a168ced35f7588568c7db275fb21015d54f6bc6de74a
+untagged: sha256:3fdd826e750a0562086b82305fdef961089b7ee99a20cb2a4c7e61cf9f76515a
+deleted: sha256:3fdd826e750a0562086b82305fdef961089b7ee99a20cb2a4c7e61cf9f76515a
+untagged: sha256:47979049039e04b5f5967140a2925facdf31908a02d89bf1cc4f642be270a612
+deleted: sha256:47979049039e04b5f5967140a2925facdf31908a02d89bf1cc4f642be270a612
+untagged: sha256:c56137cb18badbe252ea05149523e44b24b351114408bb52f5cae46fac944bd1
+deleted: sha256:c56137cb18badbe252ea05149523e44b24b351114408bb52f5cae46fac944bd1
+untagged: sha256:d58f1d495aeb744b62d5db71977eeb7ee48ca05d7dc5a952a69f0228af080841
+deleted: sha256:d58f1d495aeb744b62d5db71977eeb7ee48ca05d7dc5a952a69f0228af080841
+untagged: sha256:115a4baaacd5a51cee52b715771bd1dd8a9fa39cb0354b7b3ba494953accd8c8
+deleted: sha256:115a4baaacd5a51cee52b715771bd1dd8a9fa39cb0354b7b3ba494953accd8c8
+untagged: sha256:527e802225f5e34b074f921f63bd4819ad175c641ca12a34f6a718da54e082b2
+deleted: sha256:527e802225f5e34b074f921f63bd4819ad175c641ca12a34f6a718da54e082b2
+untagged: sha256:56448b9d63b6c772ceab4681bd8ef04db9cd70a2cb24060a6c0786568940d9b5
+deleted: sha256:56448b9d63b6c772ceab4681bd8ef04db9cd70a2cb24060a6c0786568940d9b5
+untagged: sha256:8b9f67a2e6d6f2e06158f6a69488df6c94bf5debe3bc6d7896bbeb2839377fc7
+deleted: sha256:8b9f67a2e6d6f2e06158f6a69488df6c94bf5debe3bc6d7896bbeb2839377fc7
+untagged: sha256:a8697f940af73c4b24ecf3c216134d3fd7913b3c0b78fb5391373abc5a7870e1
+deleted: sha256:a8697f940af73c4b24ecf3c216134d3fd7913b3c0b78fb5391373abc5a7870e1
+untagged: sha256:d4897d83d159270593d391899a35704fa3b22e8cc4e4dbe64c049541e2e379be
+deleted: sha256:d4897d83d159270593d391899a35704fa3b22e8cc4e4dbe64c049541e2e379be
+untagged: sha256:e4a281ef00c063075c500685a4f05dad285e6d3472750a298baa038b1c3fb60d
+deleted: sha256:e4a281ef00c063075c500685a4f05dad285e6d3472750a298baa038b1c3fb60d
+untagged: sha256:e695057d6e2a68d26d2bc6fdd581473b0084501e23360ac7525c2d936ef2c8b7
+deleted: sha256:e695057d6e2a68d26d2bc6fdd581473b0084501e23360ac7525c2d936ef2c8b7
+untagged: sha256:024227eba8deef4bbbfe531532d3223efc4bd91f4fa4690a3b89486df21527a2
+deleted: sha256:024227eba8deef4bbbfe531532d3223efc4bd91f4fa4690a3b89486df21527a2
+untagged: sha256:2ebbb38f98a6cbf81f3f279a663cd43e83af864a1fa76a08643fbcf1bc5d0ed4
+deleted: sha256:2ebbb38f98a6cbf81f3f279a663cd43e83af864a1fa76a08643fbcf1bc5d0ed4
+untagged: sha256:82cad48eaa109ec8c83a47e906169d8dfff95daaae298f30336992de0d358160
+deleted: sha256:82cad48eaa109ec8c83a47e906169d8dfff95daaae298f30336992de0d358160
+untagged: sha256:d2bf09a35939014c3a89507733e9aaeaa53b37a4cbb70f04b4fe5e4c95ad1ab2
+deleted: sha256:d2bf09a35939014c3a89507733e9aaeaa53b37a4cbb70f04b4fe5e4c95ad1ab2
+untagged: sha256:ff8cd20a5c997bed0ab5bc2a5f225f2c0ca2c3793681e6ccfb8a8f7e53721d35
+deleted: sha256:ff8cd20a5c997bed0ab5bc2a5f225f2c0ca2c3793681e6ccfb8a8f7e53721d35
+untagged: sha256:3271481c5ec5468d203fb6ce386a532a76d25eba414271cc3743c9cfc76dcbe6
+deleted: sha256:3271481c5ec5468d203fb6ce386a532a76d25eba414271cc3743c9cfc76dcbe6
+untagged: sha256:71dd4185ce8cac7b18eded4cbfe30db5c8c930b0f342d9fb252598d9b79bb040
+deleted: sha256:71dd4185ce8cac7b18eded4cbfe30db5c8c930b0f342d9fb252598d9b79bb040
+untagged: sha256:b25ea2292aa091a67631a5133a2a108de2281be0f9e2beeefa973f061e6791ed
+deleted: sha256:b25ea2292aa091a67631a5133a2a108de2281be0f9e2beeefa973f061e6791ed
+untagged: sha256:c42c957a660c0bf273bb97911b5fe7c1804bdc9acd40c9571ec2ea179a3c6b31
+deleted: sha256:c42c957a660c0bf273bb97911b5fe7c1804bdc9acd40c9571ec2ea179a3c6b31
+untagged: sha256:d8f01a41bedbe4807b6160b1e9fec9deb6af951a5942340eb7db4c62124183df
+deleted: sha256:d8f01a41bedbe4807b6160b1e9fec9deb6af951a5942340eb7db4c62124183df
+untagged: sha256:ef91713e29fb321fd7ccbfa5eacda0c708c42f7ed0008e6097417adb8e7de148
+deleted: sha256:ef91713e29fb321fd7ccbfa5eacda0c708c42f7ed0008e6097417adb8e7de148
+untagged: sha256:167c8ef89af00c29da0bd3b6cc50813e76397e11deb4d1a32b3a27a995258816
+deleted: sha256:167c8ef89af00c29da0bd3b6cc50813e76397e11deb4d1a32b3a27a995258816
+untagged: sha256:276d226acab9e763a15a365b82008c14711aa672b28e0859d339593f85d6905b
+deleted: sha256:276d226acab9e763a15a365b82008c14711aa672b28e0859d339593f85d6905b
+untagged: sha256:828a4d890352e417516520bf0457723f54a24f2e7aba75bd124cc84b91ae254d
+deleted: sha256:828a4d890352e417516520bf0457723f54a24f2e7aba75bd124cc84b91ae254d
+untagged: sha256:9264c16ae6a87c5f7046be0ad260c3f9225518d7e36a46397e2a72d8d37b8753
+deleted: sha256:9264c16ae6a87c5f7046be0ad260c3f9225518d7e36a46397e2a72d8d37b8753
+untagged: sha256:a0ed1f86e85bee3763b39bfd61a1270d7b1a62a0574a67503f5d1d6c9563046d
+deleted: sha256:a0ed1f86e85bee3763b39bfd61a1270d7b1a62a0574a67503f5d1d6c9563046d
+untagged: sha256:a48169cd7445f588d3546cbc0f6d36f6c03e181b721e1fcee942119e4e238374
+deleted: sha256:a48169cd7445f588d3546cbc0f6d36f6c03e181b721e1fcee942119e4e238374
+untagged: sha256:b39014d2873ba6748bc9b3d849fdd4e0d263b57eae53023eb4d6b05550db9a27
+deleted: sha256:b39014d2873ba6748bc9b3d849fdd4e0d263b57eae53023eb4d6b05550db9a27
+untagged: sha256:f467158d867479ccd65c11944b6eab7e0d8d92579941786eaed7d0ea9badf7e4
+deleted: sha256:f467158d867479ccd65c11944b6eab7e0d8d92579941786eaed7d0ea9badf7e4
+untagged: sha256:01a6094f44ee01903e67578e4049e74caad07f987dbd0fbf68f1cd03ad08d656
+deleted: sha256:01a6094f44ee01903e67578e4049e74caad07f987dbd0fbf68f1cd03ad08d656
+untagged: sha256:13b6c27e73ca3b1f925ec010afeedcffcdc284a9910b22d1d6cef8008adb2d0d
+deleted: sha256:13b6c27e73ca3b1f925ec010afeedcffcdc284a9910b22d1d6cef8008adb2d0d
+untagged: sha256:5db69dec909361466b347f2ded8937b446661143552e51deb989ee16597ef0e8
+deleted: sha256:5db69dec909361466b347f2ded8937b446661143552e51deb989ee16597ef0e8
+untagged: sha256:7ac5156e2ba8d45a1b610d0e7ecf377ba92c3f4c14c63f649d202bceac8979d7
+deleted: sha256:7ac5156e2ba8d45a1b610d0e7ecf377ba92c3f4c14c63f649d202bceac8979d7
+untagged: sha256:a0b4de9e8292f0361c7ccad507d0c3ef2158c98d549bf54bb9d758f46d7f75cd
+deleted: sha256:a0b4de9e8292f0361c7ccad507d0c3ef2158c98d549bf54bb9d758f46d7f75cd
+untagged: sha256:cdc86cdbca471277fd8d1b435b1e123d81f398e3d18e129a9f4f838d909187cb
+deleted: sha256:cdc86cdbca471277fd8d1b435b1e123d81f398e3d18e129a9f4f838d909187cb
+untagged: sha256:964b1ab7429606af8d0c577ee73e357c9b8d0525284b6101bed26a8ae561e888
+deleted: sha256:964b1ab7429606af8d0c577ee73e357c9b8d0525284b6101bed26a8ae561e888
+
+Total reclaimed space: 140.3MB
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS

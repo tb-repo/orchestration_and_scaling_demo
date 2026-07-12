@@ -464,21 +464,25 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
    appVersion: "1.0.0"
    ```
 
-3. **Create `helm/values.yaml`:**
-   Add default configuration values. Replace `<YOUR_AWS_ACCOUNT_ID>` with your AWS Account ID:
+3. **Create `helm/values.yml`:**
+   Add default configuration values. Decouple your ECR URL by using `imageRegistry`, and set up your annotated Service Account:
    ```yaml
    replicaCount: 2
 
-   awsAccountId: "<YOUR_AWS_ACCOUNT_ID>"
-   awsRegion: "us-east-1"
+   # Your ECR Image Registry (prefix without the sub-paths)
+   imageRegistry: "<YOUR_AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com"
 
    # AWS configurations for S3 video streaming and uploads
    aws:
-     accessKeyId: "<YOUR_AWS_ACCESS_KEY_ID>"
-     secretAccessKey: "<YOUR_AWS_SECRET_ACCESS_KEY>"
      region: "us-east-1"
      s3Bucket: "<YOUR_AWS_S3_BUCKET_NAME>"
      cdnUrl: ""
+
+   jwtSecret: "changeme"
+
+   # The Service Account mapped to the AWS IAM Role for S3 access (IRSA)
+   serviceAccount:
+     name: "streaming-app-sa"
 
    mongodb:
      image: mongo
@@ -513,16 +517,89 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
    ```
 
 4. **Define Kubernetes Resources inside templates folder:**
-   Create individual YAML configuration manifests inside `helm/templates/`.
+   
+   First, **Associate IAM OIDC Provider & Create the IAM Service Account (IRSA):**
+   Run this command on your terminal. This creates an IAM Role (`streaming-app-s3-role`) with standard S3 permissions and binds it to a Kubernetes Service Account (`streaming-app-sa`) inside the **`streaming-app`** namespace in your EKS cluster:
+   ```bash
+   # Associate IAM OIDC Provider (if not already done)
+   eksctl utils associate-iam-oidc-provider --cluster streaming-app-cluster --approve
 
-   ##### 1. **MongoDB StatefulSet** (`helm/templates/mongodb.yaml`):
+   # Create the IAM Service Account inside the custom namespace
+   eksctl create iamserviceaccount \
+     --name streaming-app-sa \
+     --namespace streaming-app \
+     --cluster streaming-app-cluster \
+     --role-name streaming-app-s3-role \
+     --attach-policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess \
+     --approve
+   ```
+
+   Now, create individual YAML configuration manifests inside `helm/templates/`:
+
+   ##### 1. **Kubernetes ConfigMap** (`helm/templates/configmap.yml`):
    ```yaml
-   apiVersion: apps/v1
-   kind: Deployment
+   apiVersion: v1
+   kind: ConfigMap
    metadata:
-     name: mongodb-deployment
-     namespace: default
+     name: streaming-app-config
+     namespace: streaming-app
+   data:
+     aws-region: {{ .Values.aws.region | quote }}
+     aws-s3-bucket: {{ .Values.aws.s3Bucket | quote }}
+     aws-cdn-url: {{ .Values.aws.cdnUrl | quote }}
+     mongo-uri: {{ .Values.mongodb.uri | quote }}
+     streaming-public-url: "/api/streaming"
+   ```
+
+   ##### 2. **Kubernetes Secret** (`helm/templates/secrets.yml`):
+   ```yaml
+   apiVersion: v1
+   kind: Secret
+   metadata:
+     name: streaming-app-secrets
+     namespace: streaming-app
+   type: Opaque
+   data:
+     jwt-secret: {{ .Values.jwtSecret | b64enc | quote }}
+   ```
+
+   ##### 3. **MongoDB StatefulSet, PV, and PVC** (`helm/templates/mongodb.yml`):
+   ```yaml
+   apiVersion: v1
+   kind: PersistentVolume
+   metadata:
+     name: mongodb-pv
+     labels:
+       type: local
    spec:
+     storageClassName: manual
+     capacity:
+       storage: 5Gi
+     accessModes:
+       - ReadWriteOnce
+     hostPath:
+       path: "/mnt/data/mongodb"
+   ---
+   apiVersion: v1
+   kind: PersistentVolumeClaim
+   metadata:
+     name: mongodb-pvc
+     namespace: streaming-app
+   spec:
+     storageClassName: manual
+     accessModes:
+       - ReadWriteOnce
+     resources:
+       requests:
+         storage: 5Gi
+   ---
+   apiVersion: apps/v1
+   kind: StatefulSet
+   metadata:
+     name: mongodb-statefulset
+     namespace: streaming-app
+   spec:
+     serviceName: mongodb-service
      replicas: 1
      selector:
        matchLabels:
@@ -542,13 +619,14 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
                  mountPath: /data/db
          volumes:
            - name: mongo-storage
-             emptyDir: {}
+             persistentVolumeClaim:
+               claimName: mongodb-pvc
    ---
    apiVersion: v1
    kind: Service
    metadata:
      name: mongodb-service
-     namespace: default
+     namespace: streaming-app
    spec:
      ports:
        - port: {{ .Values.mongodb.port }}
@@ -557,13 +635,13 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
        app: mongodb
    ```
 
-   ##### 2. **Auth Service** (`helm/templates/auth.yaml`):
+   ##### 4. **Auth Service** (`helm/templates/auth.yml`):
    ```yaml
    apiVersion: apps/v1
    kind: Deployment
    metadata:
      name: auth-deployment
-     namespace: default
+     namespace: streaming-app
    spec:
      replicas: {{ .Values.replicaCount }}
      selector:
@@ -574,32 +652,41 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
          labels:
            app: auth-service
        spec:
+         serviceAccountName: {{ .Values.serviceAccount.name }}
          containers:
            - name: auth-service
-             image: "{{ .Values.awsAccountId }}.dkr.ecr.{{ .Values.awsRegion }}.amazonaws.com/{{ .Values.authService.image }}:{{ .Values.authService.tag }}"
+             image: "{{ .Values.imageRegistry }}/{{ .Values.authService.image }}:{{ .Values.authService.tag }}"
              ports:
                - containerPort: {{ .Values.authService.port }}
              env:
                - name: PORT
                  value: "{{ .Values.authService.port }}"
                - name: MONGO_URI
-                 value: "{{ .Values.mongodb.uri }}"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: mongo-uri
                - name: JWT_SECRET
-                 value: "changeme"
-               - name: AWS_ACCESS_KEY_ID
-                 value: "{{ .Values.aws.accessKeyId }}"
-               - name: AWS_SECRET_ACCESS_KEY
-                 value: "{{ .Values.aws.secretAccessKey }}"
+                 valueFrom:
+                   secretKeyRef:
+                     name: streaming-app-secrets
+                     key: jwt-secret
                - name: AWS_REGION
-                 value: "{{ .Values.aws.region }}"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: aws-region
                - name: AWS_S3_BUCKET
-                 value: "{{ .Values.aws.s3Bucket }}"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: aws-s3-bucket
    ---
    apiVersion: v1
    kind: Service
    metadata:
      name: auth-service
-     namespace: default
+     namespace: streaming-app
    spec:
      ports:
        - port: {{ .Values.authService.port }}
@@ -608,13 +695,13 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
        app: auth-service
    ```
 
-   ##### 3. **Streaming Service** (`helm/templates/streaming.yaml`):
+   ##### 5. **Streaming Service** (`helm/templates/streaming.yml`):
    ```yaml
    apiVersion: apps/v1
    kind: Deployment
    metadata:
      name: streaming-deployment
-     namespace: default
+     namespace: streaming-app
    spec:
      replicas: {{ .Values.replicaCount }}
      selector:
@@ -625,36 +712,51 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
          labels:
            app: streaming-service
        spec:
+         serviceAccountName: {{ .Values.serviceAccount.name }}
          containers:
            - name: streaming-service
-             image: "{{ .Values.awsAccountId }}.dkr.ecr.{{ .Values.awsRegion }}.amazonaws.com/{{ .Values.streamingService.image }}:{{ .Values.streamingService.tag }}"
+             image: "{{ .Values.imageRegistry }}/{{ .Values.streamingService.image }}:{{ .Values.streamingService.tag }}"
              ports:
                - containerPort: {{ .Values.streamingService.port }}
              env:
                - name: PORT
                  value: "{{ .Values.streamingService.port }}"
                - name: MONGO_URI
-                 value: "{{ .Values.mongodb.uri }}"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: mongo-uri
                - name: JWT_SECRET
-                 value: "changeme"
-               - name: AWS_ACCESS_KEY_ID
-                 value: "{{ .Values.aws.accessKeyId }}"
-               - name: AWS_SECRET_ACCESS_KEY
-                 value: "{{ .Values.aws.secretAccessKey }}"
+                 valueFrom:
+                   secretKeyRef:
+                     name: streaming-app-secrets
+                     key: jwt-secret
                - name: AWS_REGION
-                 value: "{{ .Values.aws.region }}"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: aws-region
                - name: AWS_S3_BUCKET
-                 value: "{{ .Values.aws.s3Bucket }}"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: aws-s3-bucket
                - name: AWS_CDN_URL
-                 value: "{{ .Values.aws.cdnUrl }}"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: aws-cdn-url
                - name: STREAMING_PUBLIC_URL
-                 value: "/api/streaming"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: streaming-public-url
    ---
    apiVersion: v1
    kind: Service
    metadata:
      name: streaming-service
-     namespace: default
+     namespace: streaming-app
    spec:
      ports:
        - port: {{ .Values.streamingService.port }}
@@ -663,13 +765,13 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
        app: streaming-service
    ```
 
-   ##### 4. **Admin Service** (`helm/templates/admin.yaml`):
+   ##### 6. **Admin Service** (`helm/templates/admin.yml`):
    ```yaml
    apiVersion: apps/v1
    kind: Deployment
    metadata:
      name: admin-deployment
-     namespace: default
+     namespace: streaming-app
    spec:
      replicas: {{ .Values.replicaCount }}
      selector:
@@ -680,34 +782,46 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
          labels:
            app: admin-service
        spec:
+         serviceAccountName: {{ .Values.serviceAccount.name }}
          containers:
            - name: admin-service
-             image: "{{ .Values.awsAccountId }}.dkr.ecr.{{ .Values.awsRegion }}.amazonaws.com/{{ .Values.adminService.image }}:{{ .Values.adminService.tag }}"
+             image: "{{ .Values.imageRegistry }}/{{ .Values.adminService.image }}:{{ .Values.adminService.tag }}"
              ports:
                - containerPort: {{ .Values.adminService.port }}
              env:
                - name: PORT
                  value: "{{ .Values.adminService.port }}"
                - name: MONGO_URI
-                 value: "{{ .Values.mongodb.uri }}"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: mongo-uri
                - name: JWT_SECRET
-                 value: "changeme"
-               - name: AWS_ACCESS_KEY_ID
-                 value: "{{ .Values.aws.accessKeyId }}"
-               - name: AWS_SECRET_ACCESS_KEY
-                 value: "{{ .Values.aws.secretAccessKey }}"
+                 valueFrom:
+                   secretKeyRef:
+                     name: streaming-app-secrets
+                     key: jwt-secret
                - name: AWS_REGION
-                 value: "{{ .Values.aws.region }}"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: aws-region
                - name: AWS_S3_BUCKET
-                 value: "{{ .Values.aws.s3Bucket }}"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: aws-s3-bucket
                - name: AWS_CDN_URL
-                 value: "{{ .Values.aws.cdnUrl }}"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: aws-cdn-url
    ---
    apiVersion: v1
    kind: Service
    metadata:
      name: admin-service
-     namespace: default
+     namespace: streaming-app
    spec:
      ports:
        - port: {{ .Values.adminService.port }}
@@ -716,13 +830,13 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
        app: admin-service
    ```
 
-   ##### 5. **Chat Service** (`helm/templates/chat.yaml`):
+   ##### 7. **Chat Service** (`helm/templates/chat.yml`):
    ```yaml
    apiVersion: apps/v1
    kind: Deployment
    metadata:
      name: chat-deployment
-     namespace: default
+     namespace: streaming-app
    spec:
      replicas: {{ .Values.replicaCount }}
      selector:
@@ -735,22 +849,28 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
        spec:
          containers:
            - name: chat-service
-             image: "{{ .Values.awsAccountId }}.dkr.ecr.{{ .Values.awsRegion }}.amazonaws.com/{{ .Values.chatService.image }}:{{ .Values.chatService.tag }}"
+             image: "{{ .Values.imageRegistry }}/{{ .Values.chatService.image }}:{{ .Values.chatService.tag }}"
              ports:
                - containerPort: {{ .Values.chatService.port }}
              env:
                - name: PORT
                  value: "{{ .Values.chatService.port }}"
                - name: MONGO_URI
-                 value: "{{ .Values.mongodb.uri }}"
+                 valueFrom:
+                   configMapKeyRef:
+                     name: streaming-app-config
+                     key: mongo-uri
                - name: JWT_SECRET
-                 value: "changeme"
+                 valueFrom:
+                   secretKeyRef:
+                     name: streaming-app-secrets
+                     key: jwt-secret
    ---
    apiVersion: v1
    kind: Service
    metadata:
      name: chat-service
-     namespace: default
+     namespace: streaming-app
    spec:
      ports:
        - port: {{ .Values.chatService.port }}
@@ -759,13 +879,13 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
        app: chat-service
    ```
 
-   ##### 6. **Frontend Router & Service** (`helm/templates/frontend.yaml`):
+   ##### 8. **Frontend Router & Service** (`helm/templates/frontend.yml`):
    ```yaml
    apiVersion: apps/v1
    kind: Deployment
    metadata:
      name: frontend-deployment
-     namespace: default
+     namespace: streaming-app
    spec:
      replicas: {{ .Values.replicaCount }}
      selector:
@@ -778,7 +898,7 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
        spec:
          containers:
            - name: frontend
-             image: "{{ .Values.awsAccountId }}.dkr.ecr.{{ .Values.awsRegion }}.amazonaws.com/{{ .Values.frontend.image }}:{{ .Values.frontend.tag }}"
+             image: "{{ .Values.imageRegistry }}/{{ .Values.frontend.image }}:{{ .Values.frontend.tag }}"
              ports:
                - containerPort: {{ .Values.frontend.port }}
    ---
@@ -786,7 +906,7 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
    kind: Service
    metadata:
      name: frontend-service
-     namespace: default
+     namespace: streaming-app
    spec:
      type: LoadBalancer
      ports:
@@ -797,21 +917,21 @@ Deploying standard `.yaml` files manually is complex. We utilize a **Helm Chart*
    ```
 
 5. **Linter & Install Stack:**
-   Validate details and deploy the Helm chart:
+   Validate details and deploy the Helm chart. We instruct Helm to deploy inside the custom `streaming-app` namespace and create it if it does not exist:
    ```bash
    # Lint configurations
    helm lint ./helm
-   
+
    # Dry-run validation
-   helm install streaming-app ./helm --dry-run
-   
+   helm install streaming-app ./helm -n streaming-app --create-namespace --dry-run
+
    # Run full installation
-   helm upgrade --install streaming-app ./helm
+   helm upgrade --install streaming-app ./helm -n streaming-app --create-namespace
    ```
 
 6. **Verify EKS Resources:**
    ```bash
-   kubectl get all
+   kubectl get all -n streaming-app
    ```
    Confirm all deployments, services, replicasets, and pods are running correctly.
 

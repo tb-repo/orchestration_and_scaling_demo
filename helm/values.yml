@@ -1,0 +1,47 @@
+replicaCount: 2
+
+# Your ECR Image Registry (prefix without the sub-paths)
+imageRegistry: "376432388605.dkr.ecr.us-east-1.amazonaws.com"
+
+# AWS configurations for S3 video streaming and uploads
+aws:
+  region: "us-east-1"
+  s3Bucket: "orchestration-scaling-demo-bucket"
+  cdnUrl: ""
+
+jwtSecret: "changeme"
+
+# The Service Account mapped to the AWS IAM Role for S3 access (IRSA)
+serviceAccount:
+  name: "streaming-app-sa"
+
+mongodb:
+  image: mongo
+  tag: 6.0
+  port: 27017
+  uri: "mongodb://mongodb-service:27017/streamingapp"
+
+authService:
+  image: streaming-app-auth
+  tag: latest
+  port: 3001
+
+streamingService:
+  image: streaming-app-streaming
+  tag: latest
+  port: 3002
+
+adminService:
+  image: streaming-app-admin
+  tag: latest
+  port: 3003
+
+chatService:
+  image: streaming-app-chat
+  tag: latest
+  port: 3004
+
+frontend:
+  image: streaming-app-frontend
+  tag: latest
+  port: 80
